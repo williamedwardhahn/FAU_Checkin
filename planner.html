@@ -1,0 +1,1092 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FAU Freshman Planner</title>
+<style>
+  :root{
+    --navy:#003366;
+    --navy-2:#001f3f;
+    --red:#CC0000;
+    --bg:#f5f6fa;
+    --card:#ffffff;
+    --ink:#1a1a1a;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --soft:#eef2f7;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg);
+  }
+
+  /* Header */
+  header{
+    background:var(--navy);
+    color:#fff; padding:20px 24px;
+    display:flex; align-items:center; gap:16px;
+    border-bottom:3px solid var(--red);
+  }
+  header .mark{
+    font:700 22px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    letter-spacing:2px;
+    padding-right:14px;
+    border-right:1px solid rgba(255,255,255,.25);
+  }
+  header h1{margin:0;font-size:18px;font-weight:600;letter-spacing:.2px}
+  header .sub{font-size:12px;opacity:.75;margin-top:2px}
+  header .spacer{flex:1}
+  header .student{
+    font-size:13px; opacity:.9;
+  }
+  header .student input{
+    background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,.35);
+    color:#fff;outline:none;font:inherit;width:140px;padding:2px 0;margin-left:6px;
+  }
+  header .student input:focus{border-bottom-color:#fff}
+  header .student input::placeholder{color:rgba(255,255,255,.55)}
+
+  /* Tabs */
+  nav.tabs{
+    background:#fff; border-bottom:1px solid var(--line);
+    display:flex; padding:0 16px; overflow-x:auto;
+    position:sticky; top:0; z-index:10;
+  }
+  nav.tabs button{
+    background:transparent;border:0;padding:14px 18px;font:inherit;color:var(--muted);
+    cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap;
+  }
+  nav.tabs button.active{color:var(--navy); border-bottom-color:var(--red); font-weight:600}
+  nav.tabs button:hover{color:var(--navy)}
+  nav.tabs button:focus-visible{outline:2px solid var(--navy);outline-offset:-2px;border-radius:2px}
+
+  main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+  section.tab{display:none}
+  section.tab.active{display:block}
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:18px; margin-bottom:16px;
+  }
+  .card h2{
+    margin:0 0 12px;font-size:16px;color:var(--navy);
+    display:flex;align-items:center;gap:10px;justify-content:space-between;
+  }
+  .card h2 .meta{font-size:12px;color:var(--muted);font-weight:400}
+  .card p.lead{margin:0 0 14px;color:var(--muted);font-size:13px}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:740px){.grid-2{grid-template-columns:1fr}}
+
+  /* Inputs */
+  input[type=text],input[type=date],input[type=time],input[type=number],select,textarea{
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px;
+    font:inherit; background:#fff; outline:none;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,51,102,.12)}
+  label.field{display:block;margin-bottom:0}
+  label.field>span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500}
+
+  button.btn{
+    background:var(--navy);color:#fff;border:0;padding:8px 14px;border-radius:6px;
+    cursor:pointer;font:inherit;font-weight:500;
+  }
+  button.btn:hover{background:var(--navy-2)}
+  button.btn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+  button.btn.ghost{background:transparent;color:var(--navy);border:1px solid var(--line)}
+  button.btn.ghost:hover{background:var(--soft)}
+  button.btn.sm{padding:5px 10px;font-size:13px}
+  button.iconbtn{
+    background:transparent;border:0;cursor:pointer;color:var(--muted);
+    font-size:16px;padding:4px 6px;border-radius:4px;
+  }
+  button.iconbtn:hover{color:var(--red);background:var(--soft)}
+  button.iconbtn:focus-visible{outline:2px solid var(--navy);outline-offset:-1px}
+
+  /* Day picker */
+  .daypicker{display:flex;gap:4px}
+  .daypicker label{
+    cursor:pointer;
+    border:1px solid var(--line);background:#fff;
+    border-radius:6px;padding:6px 0;width:36px;text-align:center;
+    font-size:13px;font-weight:600;color:var(--muted);
+    user-select:none;
+  }
+  .daypicker label:hover{border-color:var(--navy)}
+  .daypicker input{position:absolute;opacity:0;pointer-events:none}
+  .daypicker input:checked + label{
+    background:var(--navy);color:#fff;border-color:var(--navy);
+  }
+  .daypicker input:focus-visible + label{outline:2px solid var(--red);outline-offset:1px}
+
+  /* Schedule grid */
+  .sched{
+    display:grid;
+    grid-template-columns:60px repeat(5,1fr);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    background:#fff;
+  }
+  .sched .head{
+    background:var(--navy);color:#fff;padding:10px 6px;
+    text-align:center;font-size:12px;font-weight:600;letter-spacing:.5px;
+    border-left:1px solid rgba(255,255,255,.1);
+  }
+  .sched .head:first-child{border-left:0}
+  .sched .time-col, .sched .day-col{
+    position:relative;
+    height:624px; /* 13 hours * 48px */
+    border-left:1px solid var(--line);
+  }
+  .sched .time-col{border-left:0;background:#fafbfd}
+  .sched .day-col{
+    background-image:repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 47px,
+      var(--line) 47px,
+      var(--line) 48px
+    );
+  }
+  .sched .hour-mark{
+    position:absolute;right:6px;font-size:11px;color:var(--muted);
+    transform:translateY(-50%);
+  }
+  .sched .event{
+    position:absolute;
+    padding:4px 6px;font-size:11px;line-height:1.25;
+    background:#e8eef7;
+    border-left:3px solid var(--navy);
+    border-radius:3px;
+    overflow:hidden;
+    cursor:default;
+  }
+  .sched .event.alt{background:#fbe6e6;border-left-color:var(--red)}
+  .sched .event.conflict{
+    background:#fbe6e6;border:1px solid var(--red);border-left-width:3px;
+  }
+  .sched .event strong{display:block;font-size:11px}
+  .sched .event .ev-time{display:block;color:var(--muted);font-size:10px}
+  .sched .event .ev-loc{display:block;color:var(--muted);font-size:10px}
+  .sched .event .warn{
+    float:right;color:var(--red);font-weight:700;font-size:12px;
+  }
+  .sched-empty{
+    text-align:center;color:var(--muted);font-size:13px;padding:30px 0;
+  }
+
+  /* Lists */
+  .list{list-style:none;margin:0;padding:0}
+  .list li{
+    display:flex;align-items:center;gap:10px;padding:10px 6px;border-bottom:1px solid var(--line);
+  }
+  .list li:last-child{border-bottom:0}
+  .list li.done .label{text-decoration:line-through;color:var(--muted)}
+  .list .label{flex:1}
+  .list .meta{font-size:12px;color:var(--muted)}
+  .list .meta.overdue{color:var(--red);font-weight:600}
+  .list .meta.soon{color:var(--navy);font-weight:600}
+  .list input[type=checkbox]{width:18px;height:18px;accent-color:var(--navy);flex-shrink:0}
+  .list .empty{justify-content:center;color:var(--muted);font-size:13px;padding:22px;border:0}
+
+  /* Checklist */
+  .check-cat{margin-bottom:18px}
+  .check-cat h3{
+    margin:0 0 6px;font-size:14px;color:var(--navy);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .check-cat h3 .progress{
+    font-size:12px;color:var(--muted);font-weight:500;
+    background:var(--soft);padding:2px 10px;border-radius:10px;
+  }
+  .check-cat ul{list-style:none;margin:0;padding:0}
+  .check-cat li{padding:7px 0;display:flex;align-items:flex-start;gap:10px;font-size:14px;border:0}
+  .check-cat li.done label{text-decoration:line-through;color:var(--muted)}
+  .check-cat li input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--red)}
+  .check-cat li .note{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  .check-cat li label{cursor:pointer}
+
+  /* Progress bar */
+  .progressbar{
+    background:var(--soft);height:8px;border-radius:4px;overflow:hidden;
+  }
+  .progressbar > div{
+    height:100%;background:linear-gradient(90deg,var(--navy),var(--red));
+    transition:width .2s;
+  }
+
+  /* GPA */
+  table.gpa{width:100%;border-collapse:collapse}
+  table.gpa th,table.gpa td{padding:8px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
+  table.gpa th{background:var(--soft);color:var(--navy);font-weight:600}
+  table.gpa td input,table.gpa td select{padding:5px 7px}
+  table.gpa td.del{text-align:center;width:36px}
+  .gpa-total{
+    margin-top:14px;display:flex;justify-content:space-between;align-items:center;
+    background:var(--navy);color:#fff;
+    padding:14px 18px;border-radius:8px;
+  }
+  .gpa-total .v{font-size:26px;font-weight:700;letter-spacing:.5px}
+  .gpa-total .l{font-size:13px;opacity:.85}
+
+  /* Resources */
+  .res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+  .res-grid a{
+    display:block;padding:12px;background:#fff;border:1px solid var(--line);border-radius:8px;
+    text-decoration:none;color:var(--ink);
+  }
+  .res-grid a:hover{border-color:var(--navy);background:var(--soft)}
+  .res-grid a:focus-visible{outline:2px solid var(--navy);outline-offset:1px}
+  .res-grid .name{font-weight:600;color:var(--navy);font-size:14px;margin-bottom:2px}
+  .res-grid .desc{font-size:12px;color:var(--muted)}
+  .phones a{color:var(--navy);text-decoration:none;font-variant-numeric:tabular-nums}
+  .phones a:hover{text-decoration:underline}
+
+  /* Notes */
+  textarea.notes{
+    min-height:120px;resize:vertical;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;
+  }
+
+  /* Form row */
+  .row{display:grid;grid-template-columns:1.4fr 1.6fr 120px 110px 110px 1fr auto;gap:10px;align-items:end}
+  .row.tasks{grid-template-columns:2.4fr 130px 130px auto}
+  @media (max-width:820px){.row, .row.tasks{grid-template-columns:1fr 1fr; }}
+
+  /* Error message */
+  .err{
+    color:var(--red);font-size:12px;margin-top:6px;min-height:1em;
+  }
+
+  /* Footer */
+  footer{
+    text-align:center;color:var(--muted);font-size:12px;padding:18px;border-top:1px solid var(--line);
+    background:#fff;
+  }
+  footer .actions{margin-top:8px;display:inline-flex;gap:8px}
+
+  /* Print */
+  @media print{
+    body{background:#fff}
+    header{background:#fff;color:#000;border-bottom:2px solid #000}
+    header .mark{color:#000;border-color:#000}
+    header .student{display:none}
+    nav.tabs{display:none}
+    section.tab{display:block !important;page-break-after:always}
+    section.tab:last-of-type{page-break-after:auto}
+    .card{border:1px solid #000;box-shadow:none;break-inside:avoid}
+    button,footer{display:none}
+    .sched .head{background:#000;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .sched .event{border:1px solid #000;background:#eee !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="mark" aria-hidden="true">FAU</div>
+  <div>
+    <h1>Freshman Planner</h1>
+    <div class="sub">Florida Atlantic University · Go Owls</div>
+  </div>
+  <div class="spacer"></div>
+  <label class="student">
+    Hi,<input id="studentName" placeholder="your name" autocomplete="off" aria-label="Your name">
+  </label>
+</header>
+
+<nav class="tabs" id="tabs" role="tablist">
+  <button data-tab="today" class="active" role="tab" aria-selected="true">Today</button>
+  <button data-tab="checklist" role="tab">Freshman Checklist</button>
+  <button data-tab="schedule" role="tab">Class Schedule</button>
+  <button data-tab="tasks" role="tab">Assignments</button>
+  <button data-tab="resources" role="tab">FAU Resources</button>
+  <button data-tab="gpa" role="tab">GPA</button>
+</nav>
+
+<main>
+
+  <!-- TODAY -->
+  <section id="today" class="tab active" role="tabpanel">
+    <div class="grid-2">
+      <div class="card">
+        <h2>Today's classes <span class="meta" id="todayDate"></span></h2>
+        <ul class="list" id="todayClasses"></ul>
+      </div>
+      <div class="card">
+        <h2>Up next this week</h2>
+        <ul class="list" id="todayUpcoming"></ul>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h2>Freshman checklist progress</h2>
+        <div id="todayChecklist"></div>
+      </div>
+      <div class="card">
+        <h2>Quick notes</h2>
+        <p class="lead">Saves as you type. A scratchpad for office hours, locker combos, anything.</p>
+        <textarea id="notesArea" class="notes" placeholder="Office hours, deadlines, reminders…"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHECKLIST -->
+  <section id="checklist" class="tab" role="tabpanel">
+    <div class="card">
+      <h2>The new-Owl checklist</h2>
+      <p class="lead">The things every FAU freshman needs to take care of. Saves automatically as you check them off.</p>
+      <div id="checklistContainer"></div>
+      <div style="margin-top:8px;text-align:right">
+        <button class="btn ghost sm" id="resetChecklist">Reset checklist</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section id="schedule" class="tab" role="tabpanel">
+    <div class="card">
+      <h2>Add a course</h2>
+      <form id="courseForm" autocomplete="off">
+        <div class="row">
+          <label class="field"><span>Course code</span><input id="cCode" type="text" placeholder="ENC1101" required></label>
+          <label class="field"><span>Title</span><input id="cTitle" type="text" placeholder="Composition I"></label>
+          <div>
+            <span style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500">Days</span>
+            <div class="daypicker" id="cDays" role="group" aria-label="Days of the week">
+              <input type="checkbox" id="d-M" value="M"><label for="d-M">M</label>
+              <input type="checkbox" id="d-T" value="T"><label for="d-T">T</label>
+              <input type="checkbox" id="d-W" value="W"><label for="d-W">W</label>
+              <input type="checkbox" id="d-R" value="R"><label for="d-R">R</label>
+              <input type="checkbox" id="d-F" value="F"><label for="d-F">F</label>
+            </div>
+          </div>
+          <label class="field"><span>Start</span><input id="cStart" type="time" value="09:00" required></label>
+          <label class="field"><span>End</span><input id="cEnd" type="time" value="09:50" required></label>
+          <label class="field"><span>Location</span><input id="cLoc" type="text" placeholder="GS 117"></label>
+          <button class="btn" type="submit">Add</button>
+        </div>
+        <div class="err" id="courseErr" role="alert"></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Week view <span class="meta" id="conflictMeta"></span></h2>
+      <div class="sched" id="schedGrid"></div>
+    </div>
+    <div class="card">
+      <h2>My courses</h2>
+      <ul class="list" id="courseList"></ul>
+    </div>
+  </section>
+
+  <!-- TASKS -->
+  <section id="tasks" class="tab" role="tabpanel">
+    <div class="card">
+      <h2>Add an assignment</h2>
+      <p class="lead">Readings, papers, exams, club meetings — anything with a deadline.</p>
+      <form id="taskForm" autocomplete="off">
+        <div class="row tasks">
+          <label class="field"><span>What's due?</span><input id="tName" type="text" placeholder="Essay draft, ENC1101" required></label>
+          <label class="field"><span>Due date</span><input id="tDue" type="date"></label>
+          <label class="field"><span>Course</span><select id="tCourse"><option value="">(none)</option></select></label>
+          <button class="btn" type="submit">Add</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Open <span class="meta" id="taskOpenCount">0 open</span></h2>
+      <ul class="list" id="taskOpen"></ul>
+    </div>
+    <div class="card">
+      <h2>Completed</h2>
+      <ul class="list" id="taskDone"></ul>
+    </div>
+  </section>
+
+  <!-- RESOURCES -->
+  <section id="resources" class="tab" role="tabpanel">
+    <div class="card">
+      <h2>Essential FAU links</h2>
+      <p class="lead">Bookmark these. Every Owl uses them constantly.</p>
+      <div class="res-grid" id="resGrid"></div>
+    </div>
+    <div class="card phones">
+      <h2>Important phone numbers</h2>
+      <ul class="list" id="phoneList"></ul>
+    </div>
+  </section>
+
+  <!-- GPA -->
+  <section id="gpa" class="tab" role="tabpanel">
+    <div class="card">
+      <h2>GPA calculator</h2>
+      <p class="lead">FAU uses a 4.0 scale with plus/minus. Add finished or projected grades to see your term/cumulative GPA.</p>
+      <table class="gpa">
+        <thead><tr><th>Course</th><th style="width:90px">Credits</th><th style="width:120px">Grade</th><th class="del" aria-label="Remove"></th></tr></thead>
+        <tbody id="gpaBody"></tbody>
+      </table>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn" id="addGpaRow" type="button">+ Add course</button>
+        <button class="btn ghost" id="importCourses" type="button">Import from Schedule</button>
+      </div>
+      <div class="gpa-total">
+        <div>
+          <div class="l">Projected GPA</div>
+          <div class="v" id="gpaValue">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="l">Total credits</div>
+          <div class="v" id="gpaCredits">0</div>
+        </div>
+      </div>
+      <p class="lead" id="gpaSummary" style="margin-top:14px"></p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Data saves locally in your browser. Use the same browser to come back to it.
+  <div class="actions">
+    <button class="btn ghost sm" id="exportData" type="button">Export</button>
+    <button class="btn ghost sm" id="importData" type="button">Import</button>
+    <button class="btn ghost sm" id="printPlanner" type="button">Print</button>
+    <button class="btn ghost sm" id="wipeData" type="button">Clear all</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+  </div>
+</footer>
+
+<script>
+'use strict';
+
+/* ---------- Storage & migration ---------- */
+const KEY = 'fau_freshman_planner_v1';
+const defaultData = {
+  name:'',
+  courses:[],   // {id, code, title, days:[M,T,W,R,F], start, end, loc, credits}
+  tasks:[],     // {id, name, due, courseId, done}
+  checklist:{}, // {itemId: true}
+  gpa:[],       // {id, code, credits, grade}
+  notes:''
+};
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return structuredClone(defaultData);
+    const parsed = JSON.parse(raw);
+    return migrate(Object.assign(structuredClone(defaultData), parsed));
+  }catch(e){ return structuredClone(defaultData); }
+}
+function migrate(d){
+  // v1 stored days as a string like "MWF" — convert to an array
+  if(Array.isArray(d.courses)){
+    d.courses.forEach(c=>{
+      if(typeof c.days === 'string'){
+        c.days = c.days.split('').filter(ch=>'MTWRF'.includes(ch));
+      }
+      if(!Array.isArray(c.days)) c.days = [];
+      if(!c.credits) c.credits = 3;
+    });
+  }
+  return d;
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(data)); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+let data = load();
+
+/* ---------- Utilities ---------- */
+const DAY_NAMES = {M:'Mon', T:'Tue', W:'Wed', R:'Thu', F:'Fri'};
+const DAY_ORDER = ['M','T','W','R','F'];
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function timeToMin(t){
+  if(!t) return 0;
+  const [h,m] = t.split(':').map(Number);
+  return h*60 + m;
+}
+function fmtTime(t){
+  if(!t) return '';
+  const [h,m] = t.split(':').map(Number);
+  const ap = h>=12?'PM':'AM';
+  const hh = ((h+11)%12)+1;
+  return m===0 ? `${hh}${ap}` : `${hh}:${String(m).padStart(2,'0')} ${ap}`;
+}
+function todayISO(){ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+function todayDayChar(){
+  const m = ['','M','T','W','R','F','']; // Sun=0, Sat=6 → empty
+  return m[new Date().getDay()] || '';
+}
+
+/* ---------- Tabs ---------- */
+const tabsEl = document.getElementById('tabs');
+tabsEl.addEventListener('click', e=>{
+  const b = e.target.closest('button[data-tab]'); if(!b) return;
+  tabsEl.querySelectorAll('button').forEach(x=>{
+    const on = x===b;
+    x.classList.toggle('active', on);
+    x.setAttribute('aria-selected', on?'true':'false');
+  });
+  document.querySelectorAll('main > section.tab').forEach(s=>{
+    s.classList.toggle('active', s.id===b.dataset.tab);
+  });
+  if(b.dataset.tab==='today') renderToday();
+});
+
+/* ---------- Name ---------- */
+const nameEl = document.getElementById('studentName');
+nameEl.value = data.name || '';
+nameEl.addEventListener('input', ()=>{ data.name = nameEl.value; save(); });
+
+/* ---------- Schedule ---------- */
+const SCHED_START_H = 8;   // 8 AM
+const SCHED_END_H   = 21;  // 9 PM
+const PX_PER_HOUR   = 48;
+
+function timeToY(t){
+  return (timeToMin(t) - SCHED_START_H*60) * PX_PER_HOUR / 60;
+}
+
+function detectConflicts(){
+  const conflicts = new Set();
+  for(const d of DAY_ORDER){
+    const day = data.courses.filter(c=>c.days.includes(d));
+    for(let i=0;i<day.length;i++){
+      for(let j=i+1;j<day.length;j++){
+        const a=day[i], b=day[j];
+        if(timeToMin(a.start) < timeToMin(b.end) && timeToMin(b.start) < timeToMin(a.end)){
+          conflicts.add(a.id); conflicts.add(b.id);
+        }
+      }
+    }
+  }
+  return conflicts;
+}
+
+function layoutDay(events){
+  if(events.length===0) return [];
+  const sorted = [...events].sort((a,b)=>timeToMin(a.start)-timeToMin(b.start));
+  const out = [];
+  let group = []; let groupEnd = -1;
+  const flush = ()=>{
+    if(group.length===0) return;
+    // assign columns greedy
+    const colEnds = [];
+    const placed = group.map(c=>{
+      const start = timeToMin(c.start);
+      let col = colEnds.findIndex(end => end <= start);
+      if(col === -1){ col = colEnds.length; colEnds.push(timeToMin(c.end)); }
+      else colEnds[col] = timeToMin(c.end);
+      return {course:c, col};
+    });
+    const cols = colEnds.length;
+    placed.forEach(p=>out.push({course:p.course, col:p.col, cols}));
+    group = []; groupEnd = -1;
+  };
+  for(const c of sorted){
+    if(group.length===0 || timeToMin(c.start) < groupEnd){
+      group.push(c);
+      groupEnd = Math.max(groupEnd, timeToMin(c.end));
+    } else {
+      flush();
+      group.push(c); groupEnd = timeToMin(c.end);
+    }
+  }
+  flush();
+  return out;
+}
+
+function renderSchedule(){
+  const grid = document.getElementById('schedGrid');
+  const conflicts = detectConflicts();
+
+  let html = '<div class="head" aria-hidden="true"></div>';
+  for(const d of DAY_ORDER) html += `<div class="head">${DAY_NAMES[d]}</div>`;
+
+  // Time column
+  let timeHtml = '';
+  for(let h=SCHED_START_H; h<=SCHED_END_H; h++){
+    const label = `${((h+11)%12)+1} ${h>=12?'PM':'AM'}`;
+    const top = (h-SCHED_START_H)*PX_PER_HOUR;
+    timeHtml += `<div class="hour-mark" style="top:${top}px">${label}</div>`;
+  }
+  html += `<div class="time-col">${timeHtml}</div>`;
+
+  // Day columns
+  for(const d of DAY_ORDER){
+    const dayCourses = data.courses.filter(c=>c.days.includes(d));
+    const positioned = layoutDay(dayCourses);
+    const evHtml = positioned.map((p, idx)=>{
+      const c = p.course;
+      const top = Math.max(0, timeToY(c.start));
+      const height = Math.max(20, timeToY(c.end) - timeToY(c.start) - 2);
+      const widthPct = 100/p.cols;
+      const leftPct = p.col * widthPct;
+      const alt = idx % 2 === 1 ? 'alt' : '';
+      const conflict = conflicts.has(c.id) ? 'conflict' : '';
+      const warn = conflicts.has(c.id) ? '<span class="warn" title="Time conflict" aria-label="Time conflict">⚠</span>' : '';
+      const title = `${escapeHtml(c.code)}${c.title?' — '+escapeHtml(c.title):''}\n${fmtTime(c.start)}–${fmtTime(c.end)}${c.loc?' · '+escapeHtml(c.loc):''}`;
+      return `<div class="event ${alt} ${conflict}"
+        style="top:${top}px;height:${height}px;left:calc(${leftPct}% + 2px);width:calc(${widthPct}% - 4px)"
+        title="${title}">
+        ${warn}<strong>${escapeHtml(c.code)}</strong>
+        <span class="ev-time">${fmtTime(c.start)}</span>
+        ${c.loc?`<span class="ev-loc">${escapeHtml(c.loc)}</span>`:''}
+      </div>`;
+    }).join('');
+    html += `<div class="day-col" data-day="${d}">${evHtml}</div>`;
+  }
+  grid.innerHTML = html;
+
+  // Conflict meta
+  const meta = document.getElementById('conflictMeta');
+  meta.textContent = conflicts.size>0 ? `⚠ ${conflicts.size/2 + (conflicts.size%2?0.5:0)|0} time conflict${conflicts.size>2?'s':''}` : '';
+  meta.style.color = conflicts.size>0 ? 'var(--red)' : '';
+
+  renderCourseList(conflicts);
+}
+
+function renderCourseList(conflicts){
+  const list = document.getElementById('courseList');
+  if(data.courses.length===0){
+    list.innerHTML = '<li class="empty">No courses yet. Add one above to build your week.</li>';
+    return;
+  }
+  list.innerHTML = data.courses.map(c=>{
+    const conf = conflicts && conflicts.has(c.id) ? ' <span style="color:var(--red);font-weight:600">⚠ conflicts</span>' : '';
+    const days = c.days.map(d=>DAY_NAMES[d].slice(0,1)).join('');
+    return `<li>
+      <strong style="min-width:80px">${escapeHtml(c.code)}</strong>
+      <span class="label">${escapeHtml(c.title||'')}${conf}</span>
+      <span class="meta">${days} · ${fmtTime(c.start)}–${fmtTime(c.end)}${c.loc?' · '+escapeHtml(c.loc):''}</span>
+      <button class="iconbtn" data-rm-course="${c.id}" aria-label="Remove ${escapeHtml(c.code)}">✕</button>
+    </li>`;
+  }).join('');
+}
+
+document.getElementById('courseList').addEventListener('click', e=>{
+  const id = e.target.closest('[data-rm-course]')?.dataset.rmCourse; if(!id) return;
+  data.courses = data.courses.filter(c=>c.id!==id);
+  data.tasks.forEach(t=>{ if(t.courseId===id) t.courseId=''; });
+  save(); renderSchedule(); renderTasks(); renderTaskCourseOptions(); renderToday();
+});
+
+document.getElementById('courseForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const code = document.getElementById('cCode').value.trim();
+  const title = document.getElementById('cTitle').value.trim();
+  const start = document.getElementById('cStart').value;
+  const end = document.getElementById('cEnd').value;
+  const loc = document.getElementById('cLoc').value.trim();
+  const days = Array.from(document.querySelectorAll('#cDays input:checked')).map(i=>i.value);
+  const err = document.getElementById('courseErr');
+  err.textContent = '';
+
+  if(!code){ err.textContent = 'Course code is required.'; return; }
+  if(days.length===0){ err.textContent = 'Pick at least one day.'; return; }
+  if(!start || !end){ err.textContent = 'Start and end times are required.'; return; }
+  if(timeToMin(end) <= timeToMin(start)){ err.textContent = 'End time must be after start time.'; return; }
+  if(timeToMin(start) < SCHED_START_H*60 || timeToMin(end) > SCHED_END_H*60){
+    err.textContent = `Schedule covers ${SCHED_START_H} AM – ${SCHED_END_H-12} PM. Adjust times to fit.`; return;
+  }
+
+  data.courses.push({id:uid(),code,title,days,start,end,loc,credits:3});
+  e.target.reset();
+  document.getElementById('cStart').value='09:00';
+  document.getElementById('cEnd').value='09:50';
+  save(); renderSchedule(); renderTaskCourseOptions(); renderToday();
+});
+
+/* ---------- Tasks ---------- */
+function renderTaskCourseOptions(){
+  const sel = document.getElementById('tCourse');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">(none)</option>' +
+    data.courses.map(c=>`<option value="${c.id}">${escapeHtml(c.code)}</option>`).join('');
+  sel.value = cur;
+}
+
+document.getElementById('taskForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name = document.getElementById('tName').value.trim();
+  const due = document.getElementById('tDue').value;
+  const courseId = document.getElementById('tCourse').value;
+  if(!name) return;
+  data.tasks.push({id:uid(),name,due,courseId,done:false});
+  e.target.reset();
+  renderTaskCourseOptions();
+  save(); renderTasks(); renderToday();
+});
+
+function dueLabel(t){
+  if(!t.due) return '';
+  const today = todayISO();
+  if(t.due < today && !t.done) return `Overdue · ${t.due}`;
+  if(t.due === today) return 'Due today';
+  const d = new Date(t.due+'T00:00');
+  const n = new Date(today+'T00:00');
+  const diff = Math.round((d-n)/86400000);
+  if(diff>0 && diff<=7) return `in ${diff} day${diff>1?'s':''}`;
+  return t.due;
+}
+
+function taskLi(t){
+  const c = data.courses.find(x=>x.id===t.courseId);
+  const over = t.due && t.due < todayISO() && !t.done;
+  const soon = t.due === todayISO() && !t.done;
+  const cls = over?'overdue':soon?'soon':'';
+  return `<li class="${t.done?'done':''}" data-task="${t.id}">
+    <input type="checkbox" data-toggle-task="${t.id}" ${t.done?'checked':''} aria-label="Mark ${escapeHtml(t.name)} ${t.done?'incomplete':'complete'}">
+    <span class="label">${c?'<strong>'+escapeHtml(c.code)+': </strong>':''}${escapeHtml(t.name)}</span>
+    <span class="meta ${cls}">${t.due?dueLabel(t):''}</span>
+    <button class="iconbtn" data-rm-task="${t.id}" aria-label="Remove ${escapeHtml(t.name)}">✕</button>
+  </li>`;
+}
+
+function renderTasks(){
+  const open = data.tasks.filter(t=>!t.done)
+    .sort((a,b)=>(a.due||'9999')<(b.due||'9999')?-1:1);
+  const done = data.tasks.filter(t=>t.done)
+    .sort((a,b)=>(a.due||'')<(b.due||'')?1:-1);
+  document.getElementById('taskOpenCount').textContent = `${open.length} open`;
+  document.getElementById('taskOpen').innerHTML = open.length
+    ? open.map(taskLi).join('')
+    : '<li class="empty">Nothing on your plate. Nice.</li>';
+  document.getElementById('taskDone').innerHTML = done.length
+    ? done.map(taskLi).join('')
+    : '<li class="empty">Nothing completed yet.</li>';
+}
+
+// Scoped task event handlers (avoid document-level listener)
+function handleTaskListClick(e){
+  const rm = e.target.closest('[data-rm-task]'); if(!rm) return;
+  const id = rm.dataset.rmTask;
+  data.tasks = data.tasks.filter(x=>x.id!==id);
+  save(); renderTasks(); renderToday();
+}
+function handleTaskListChange(e){
+  const cb = e.target.closest('[data-toggle-task]'); if(!cb) return;
+  const id = cb.dataset.toggleTask;
+  const t = data.tasks.find(x=>x.id===id); if(!t) return;
+  t.done = cb.checked;
+  save(); renderTasks(); renderToday();
+}
+['taskOpen','taskDone','todayUpcoming'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el){ el.addEventListener('click', handleTaskListClick); el.addEventListener('change', handleTaskListChange); }
+});
+
+/* ---------- Checklist ---------- */
+const CHECKLIST = [
+  {cat:'Before move-in', items:[
+    {id:'fafsa', text:'Submit FAFSA at studentaid.gov', note:'FAU school code: 001481'},
+    {id:'orient', text:'Register for FAU freshman orientation', note:'Through the MyFAU portal'},
+    {id:'placement', text:'Take placement tests (math, foreign language if required)'},
+    {id:'shotrecords', text:'Submit immunization records to Student Health Services', note:'Required before classes start'},
+    {id:'housing', text:'Apply for housing & roommate matching'},
+    {id:'mealplan', text:'Choose a meal plan'},
+    {id:'photosubmit', text:'Submit your Owl Card photo online'},
+  ]},
+  {cat:'First week on campus', items:[
+    {id:'owlcard', text:'Pick up your Owl Card', note:'Get it at Owl Card Services'},
+    {id:'parking', text:'Buy a parking decal if you brought a car'},
+    {id:'canvas', text:'Log into Canvas and confirm all your courses appear'},
+    {id:'myfau', text:'Set up MyFAU two-factor authentication (Duo)'},
+    {id:'syllabus', text:'Download every syllabus, add exam dates here'},
+    {id:'wifi', text:'Connect to FAUSecure Wi-Fi on phone and laptop'},
+    {id:'tour', text:'Walk the Student Union, library, and rec center routes'},
+    {id:'busroute', text:'Learn the OwlsBoss/shuttle routes between campus stops'},
+  ]},
+  {cat:'Academic setup', items:[
+    {id:'advisor', text:'Meet your academic advisor', note:'Required before second-term registration'},
+    {id:'degreeworks', text:'Look up your degree requirements in DegreeWorks'},
+    {id:'tutoring', text:'Bookmark the tutoring/CLASS studio for your subjects'},
+    {id:'library', text:'Tour the S.E. Wimberly Library; learn how to reserve study rooms'},
+    {id:'office', text:'Note office hours for every professor'},
+    {id:'addrop', text:'Mark the drop/add deadline for this term'},
+  ]},
+  {cat:'Money & ID', items:[
+    {id:'brightfutures', text:'Confirm Bright Futures hours are on file (if eligible)'},
+    {id:'directdeposit', text:'Set up direct deposit for refunds in MyFAU'},
+    {id:'tuitionplan', text:'Review tuition payment plan options if needed'},
+    {id:'bookbuy', text:'Compare textbook prices (bookstore vs. rentals)'},
+    {id:'banking', text:'Find a bank/ATM near campus'},
+  ]},
+  {cat:'Get connected', items:[
+    {id:'owlcentral', text:'Browse clubs and orgs on OwlCentral'},
+    {id:'attendgame', text:'Get tickets to a home game (free with your Owl Card)'},
+    {id:'volunteer', text:'Sign up for one campus event or volunteer day'},
+    {id:'mentor', text:'Find a peer mentor or upperclass student in your major'},
+  ]},
+  {cat:'Wellness & safety', items:[
+    {id:'fauapp', text:'Install the FAU Guardian safety app'},
+    {id:'caps', text:'Know where CAPS (Counseling) is located'},
+    {id:'health', text:'Find Student Health Services; have your insurance info handy'},
+    {id:'emergency', text:'Save FAU PD (561-297-3500) in your phone'},
+    {id:'sleep', text:'Set a regular sleep schedule — seriously, it matters'},
+  ]},
+];
+
+function renderChecklist(){
+  const root = document.getElementById('checklistContainer');
+  root.innerHTML = CHECKLIST.map(cat=>{
+    const done = cat.items.filter(i=>data.checklist[i.id]).length;
+    return `<div class="check-cat">
+      <h3>${cat.cat}<span class="progress">${done}/${cat.items.length}</span></h3>
+      <ul>
+        ${cat.items.map(i=>`
+          <li class="${data.checklist[i.id]?'done':''}">
+            <input type="checkbox" id="ck-${i.id}" data-chk="${i.id}" ${data.checklist[i.id]?'checked':''}>
+            <label for="ck-${i.id}">${escapeHtml(i.text)}${i.note?`<span class="note">${escapeHtml(i.note)}</span>`:''}</label>
+          </li>`).join('')}
+      </ul>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('checklistContainer').addEventListener('change', e=>{
+  const id = e.target.dataset.chk; if(!id) return;
+  data.checklist[id] = e.target.checked;
+  save(); renderChecklist(); renderToday();
+});
+document.getElementById('resetChecklist').addEventListener('click', ()=>{
+  if(!confirm('Reset every checklist item?')) return;
+  data.checklist = {}; save(); renderChecklist(); renderToday();
+});
+
+/* ---------- GPA ---------- */
+const GRADES = [
+  ['A',4.0],['A-',3.67],['B+',3.33],['B',3.0],['B-',2.67],
+  ['C+',2.33],['C',2.0],['C-',1.67],['D+',1.33],['D',1.0],['D-',0.67],['F',0.0]
+];
+
+function renderGpa(){
+  const body = document.getElementById('gpaBody');
+  if(data.gpa.length===0){
+    body.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">
+      No courses yet. Add one below to project your GPA.
+    </td></tr>`;
+  } else {
+    body.innerHTML = data.gpa.map(r=>`
+      <tr data-id="${r.id}">
+        <td><input type="text" data-f="code" value="${escapeHtml(r.code)}" placeholder="ENC1101" aria-label="Course code"></td>
+        <td><input type="number" min="0" max="6" step="1" data-f="credits" value="${r.credits}" aria-label="Credits"></td>
+        <td><select data-f="grade" aria-label="Grade">
+          ${GRADES.map(g=>`<option value="${g[1]}" ${String(r.grade)===String(g[1])?'selected':''}>${g[0]}</option>`).join('')}
+        </select></td>
+        <td class="del"><button class="iconbtn" data-gparm="${r.id}" aria-label="Remove row">✕</button></td>
+      </tr>
+    `).join('');
+  }
+  updateGpaTotal();
+}
+
+function updateGpaTotal(){
+  let pts=0, cr=0;
+  data.gpa.forEach(r=>{
+    const c = Number(r.credits)||0;
+    const g = Number(r.grade);
+    if(!isNaN(g) && c>0){ pts += c*g; cr += c; }
+  });
+  const gpa = cr>0 ? (pts/cr) : null;
+  document.getElementById('gpaValue').textContent = gpa===null ? '—' : gpa.toFixed(2);
+  document.getElementById('gpaCredits').textContent = cr;
+  const summary = document.getElementById('gpaSummary');
+  if(gpa===null){
+    summary.textContent = 'Your GPA will appear here once you add a course and credits.';
+  } else if(gpa>=3.5){
+    summary.textContent = `${cr} credits factored. Dean's List range — keep it up.`;
+  } else if(gpa>=3.0){
+    summary.textContent = `${cr} credits factored. Solid — meets Bright Futures.`;
+  } else if(gpa>=2.0){
+    summary.textContent = `${cr} credits factored. Good academic standing.`;
+  } else {
+    summary.textContent = `${cr} credits factored. Below 2.0 — talk to your advisor soon. Good academic standing at FAU requires a 2.0+.`;
+  }
+}
+
+document.getElementById('gpaBody').addEventListener('input', e=>{
+  const tr = e.target.closest('tr'); if(!tr) return;
+  const r = data.gpa.find(x=>x.id===tr.dataset.id); if(!r) return;
+  r[e.target.dataset.f] = e.target.value;
+  save(); updateGpaTotal();
+});
+document.getElementById('gpaBody').addEventListener('click', e=>{
+  const id = e.target.closest('[data-gparm]')?.dataset.gparm; if(!id) return;
+  data.gpa = data.gpa.filter(x=>x.id!==id); save(); renderGpa();
+});
+document.getElementById('addGpaRow').addEventListener('click', ()=>{
+  data.gpa.push({id:uid(),code:'',credits:3,grade:'4'}); save(); renderGpa();
+});
+document.getElementById('importCourses').addEventListener('click', ()=>{
+  if(data.courses.length===0){ alert('Add courses on the Schedule tab first.'); return; }
+  const existing = new Set(data.gpa.map(r=>(r.code||'').toLowerCase()));
+  let added = 0;
+  data.courses.forEach(c=>{
+    if(!existing.has((c.code||'').toLowerCase())){
+      data.gpa.push({id:uid(),code:c.code,credits:c.credits||3,grade:'4'});
+      added++;
+    }
+  });
+  save(); renderGpa();
+  if(added===0) alert('All courses already imported.');
+});
+
+/* ---------- Resources ---------- */
+const RESOURCES = [
+  {name:'MyFAU Portal', url:'https://myfau.fau.edu/', desc:'Registration, grades, financial aid'},
+  {name:'Canvas', url:'https://canvas.fau.edu/', desc:'Course pages, assignments, grades'},
+  {name:'FAU Email (Outlook)', url:'https://outlook.office.com/', desc:'Your @fau.edu mailbox'},
+  {name:'University Calendar', url:'https://www.fau.edu/registrar/universitycalendar/', desc:'Drop/add, holidays, finals'},
+  {name:'Academic Catalog', url:'https://www.fau.edu/academic/registrar/catalogs.php', desc:'Course descriptions, requirements'},
+  {name:'Registrar', url:'https://www.fau.edu/registrar/', desc:'Transcripts, enrollment, forms'},
+  {name:'Campus Recreation', url:'https://www.fau.edu/campusrec/', desc:'Gym, intramurals, fitness'},
+  {name:'Student Health Services', url:'https://www.fau.edu/shs/', desc:'On-campus clinic'},
+  {name:'CAPS (Counseling)', url:'https://www.fau.edu/counseling/', desc:'Mental health support'},
+  {name:'Owl Card Services', url:'https://www.fau.edu/owlcard/', desc:'Your student ID card'},
+  {name:'Parking & Transportation', url:'https://www.fau.edu/parking/', desc:'Decals, shuttles'},
+  {name:'Housing', url:'https://www.fau.edu/housing/', desc:'Residence halls, roommate match'},
+  {name:'Dining Services', url:'https://fau.campusdish.com/', desc:'Menus and meal plans'},
+  {name:'Bookstore', url:'https://fau.bncollege.com/', desc:'Textbooks and FAU gear'},
+  {name:'Financial Aid', url:'https://www.fau.edu/finaid/', desc:'FAFSA, scholarships, Bright Futures'},
+  {name:'Academic Advising', url:'https://www.fau.edu/uas/', desc:'Find and meet your advisor'},
+  {name:'Career Center', url:'https://www.fau.edu/career/', desc:'Resume, internships, job board'},
+  {name:'Athletics', url:'https://fausports.com/', desc:'Tickets, schedules, Go Owls'},
+];
+const PHONES = [
+  ['FAU Police (24/7)','561-297-3500'],
+  ['Emergency','911'],
+  ['Counseling (CAPS)','561-297-3540'],
+  ['Student Health Services','561-297-3512'],
+  ['Owl Card Services','561-297-2273'],
+  ['Financial Aid','561-297-3530'],
+  ['Registrar','561-297-3050'],
+  ['Housing & Residential Education','561-297-2880'],
+];
+function renderResources(){
+  document.getElementById('resGrid').innerHTML = RESOURCES.map(r=>`
+    <a href="${r.url}" target="_blank" rel="noopener noreferrer">
+      <div class="name">${escapeHtml(r.name)}</div>
+      <div class="desc">${escapeHtml(r.desc)}</div>
+    </a>`).join('');
+  document.getElementById('phoneList').innerHTML = PHONES.map(([name,num])=>`
+    <li>
+      <span class="label"><strong>${escapeHtml(name)}</strong></span>
+      <a class="meta" href="tel:${num.replace(/[^0-9]/g,'')}">${num}</a>
+    </li>`).join('');
+}
+
+/* ---------- Notes ---------- */
+const notesEl = document.getElementById('notesArea');
+notesEl.value = data.notes || '';
+notesEl.addEventListener('input', ()=>{ data.notes = notesEl.value; save(); });
+
+/* ---------- Today ---------- */
+function renderToday(){
+  // Date label
+  const now = new Date();
+  document.getElementById('todayDate').textContent =
+    now.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
+
+  // Today's classes
+  const dchar = todayDayChar();
+  const todays = dchar
+    ? data.courses.filter(c=>c.days.includes(dchar)).sort((a,b)=>timeToMin(a.start)-timeToMin(b.start))
+    : [];
+  const tEl = document.getElementById('todayClasses');
+  tEl.innerHTML = todays.length
+    ? todays.map(c=>`<li>
+        <strong style="min-width:70px">${escapeHtml(c.code)}</strong>
+        <span class="label">${escapeHtml(c.title||'')}</span>
+        <span class="meta">${fmtTime(c.start)}–${fmtTime(c.end)}${c.loc?' · '+escapeHtml(c.loc):''}</span>
+      </li>`).join('')
+    : `<li class="empty">${dchar?'No classes today. Get ahead on something.':'It\'s the weekend. Recharge.'}</li>`;
+
+  // Upcoming tasks (next 7 days)
+  const limit = new Date(); limit.setDate(limit.getDate()+7);
+  const horizon = (()=>{ const d=limit; d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); })();
+  const today = todayISO();
+  const up = data.tasks.filter(t=>!t.done && t.due && t.due<=horizon)
+    .sort((a,b)=>a.due<b.due?-1:1)
+    .slice(0,10);
+  // Include overdue
+  const overdue = data.tasks.filter(t=>!t.done && t.due && t.due<today);
+  const combined = [...overdue, ...up.filter(t=>!overdue.includes(t))];
+  document.getElementById('todayUpcoming').innerHTML = combined.length
+    ? combined.map(taskLi).join('')
+    : '<li class="empty">Nothing due this week.</li>';
+
+  // Checklist progress
+  const total = CHECKLIST.reduce((a,c)=>a+c.items.length,0);
+  const done = CHECKLIST.reduce((a,c)=>a+c.items.filter(i=>data.checklist[i.id]).length,0);
+  const pct = total? Math.round(100*done/total) : 0;
+  document.getElementById('todayChecklist').innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+      <div><strong>${done}</strong> of ${total} done</div>
+      <div style="color:var(--muted)">${pct}%</div>
+    </div>
+    <div class="progressbar"><div style="width:${pct}%"></div></div>
+    <p class="lead" style="margin-top:12px;margin-bottom:0">${
+      pct===0?'Open the Freshman Checklist tab to get started.':
+      pct<30?'Just getting going. Keep moving.':
+      pct<70?'Real progress — nice work.':
+      pct<100?'Almost there. Knock out the last few.':
+      'All checked off. You\'re ready, Owl.'
+    }</p>
+  `;
+}
+
+/* ---------- Footer actions ---------- */
+document.getElementById('exportData').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `fau-planner-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importData').addEventListener('click', ()=>{
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const obj = JSON.parse(r.result);
+      data = migrate(Object.assign(structuredClone(defaultData), obj));
+      save(); renderAll();
+      alert('Imported.');
+    }catch(err){ alert('That file is not a valid planner export.'); }
+    e.target.value = '';
+  };
+  r.readAsText(f);
+});
+document.getElementById('printPlanner').addEventListener('click', ()=>window.print());
+document.getElementById('wipeData').addEventListener('click', ()=>{
+  if(!confirm('Delete everything in this planner? This cannot be undone.')) return;
+  data = structuredClone(defaultData); save(); renderAll();
+});
+
+/* ---------- Init ---------- */
+function renderAll(){
+  nameEl.value = data.name || '';
+  notesEl.value = data.notes || '';
+  renderTaskCourseOptions();
+  renderSchedule();
+  renderTasks();
+  renderChecklist();
+  renderGpa();
+  renderResources();
+  renderToday();
+}
+renderAll();
+</script>
+</body>
+</html>
